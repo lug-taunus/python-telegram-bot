@@ -1,0 +1,36 @@
+[project]
+name = "babbel-tux"
+version = "0.1.0"
+description = "Telegram bot for the LUG-Taunus group written in Python"
+authors = [{ name = "Philip Schömig", email = "philip.schoemig@posteo.de" }]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "python-telegram-bot (>=22.3,<23.0)",
+    "requests (>=2.32.5,<3.0.0)",
+    "beautifulsoup4 (>=4.13.5,<5.0.0)",
+]
+
+[tool.poetry]
+
+[tool.poetry.group.dev.dependencies]
+black = "^25.1.0"
+isort = "^6.0.1"
+pytest = "^8.4.2"
+pytest-cov = "^7.0.0"
+tox = "^4.30.2"
+
+
+[tool.black]
+line-length = 88
+target-version = ["py39"]
+include = '\.pyi?$'
+
+
+[tool.isort]
+profile = "black"
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

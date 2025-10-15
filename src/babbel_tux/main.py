@@ -17,6 +17,8 @@ bot.
 import logging
 from pathlib import Path
 
+import requests
+from bs4 import BeautifulSoup
 from telegram import ForceReply, Update
 from telegram.ext import (
     Application,
@@ -54,7 +56,13 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 async def termine_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /termine is issued."""
-    await update.message.reply_text("Termine: ...")
+    response = requests.get("https://www.lug-taunus.org/termine")
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, "html.parser")
+    meta_description = soup.html.head.find("meta", itemprop="description")
+    termine_content = meta_description["content"]
+    termine = termine_content.replace("\v", "\n").replace("-- ", "")
+    await update.message.reply_text(termine)
 
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

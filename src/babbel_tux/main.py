@@ -65,11 +65,6 @@ async def termine_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     await update.message.reply_text(termine)
 
 
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Echo the user message."""
-    await update.message.reply_text(update.message.text + " Test")
-
-
 def main() -> None:
     """Start the bot."""
     token_file = Path(".") / "token"
@@ -82,9 +77,6 @@ def main() -> None:
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("termine", termine_command))
-
-    # on non command i.e message - echo the message on Telegram
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
     # Run the bot until the user presses Ctrl-C
     application.run_polling(allowed_updates=Update.ALL_TYPES)

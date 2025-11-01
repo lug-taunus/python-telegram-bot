@@ -1,5 +1,9 @@
-# Created by https://www.toptal.com/developers/gitignore/api/python,visualstudiocode
-# Edit at https://www.toptal.com/developers/gitignore?templates=python,visualstudiocode
+# Created by https://www.toptal.com/developers/gitignore/api/python,visualstudiocode,direnv
+
+### direnv ###
+.direnv
+#   Include direnv configuration file in version control
+#.envrc
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
@@ -192,4 +196,4 @@ pyrightconfig.json
 .history
 .ionide
 
-# End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode
+# End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode,direnv

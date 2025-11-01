@@ -1,2 +1,2 @@
-# python-telegram-bot
-Python Telegram bot for the LUG-Taunus group
+# babbel-tux
+Telegram bot for the LUG-Taunus group written in Python

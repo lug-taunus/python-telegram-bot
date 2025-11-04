@@ -1,23 +1,17 @@
 #!/usr/bin/env python
-# pylint: disable=unused-argument
+# ruff: noqa: ARG001 (unused-function-argument)
 
-"""
-Simple Bot to reply to Telegram messages.
-
-First, a few handler functions are defined. Then, those functions are passed to
-the Application and registered at their respective places.
-Then, the bot is started and runs until we press Ctrl-C on the command line.
+"""Telegram bot for the LUG-Taunus group.
 
 Usage:
-Basic Echobot example, repeats messages.
+Execute script to start the bot, which will answer to commands.
 Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
 
 import logging
-from pathlib import Path
 
-import requests
+import httpx
 from bs4 import BeautifulSoup
 from telegram import ForceReply, Update
 from telegram.ext import (
@@ -26,18 +20,21 @@ from telegram.ext import (
     ContextTypes,
 )
 
+from babbel_tux import settings
+
 # Enable logging
 logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO,
 )
 # set higher logging level for httpx to avoid all GET and POST requests being logged
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
+client = httpx.AsyncClient()
 
-# Define a few command handlers. These usually take the two arguments update and
-# context.
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /start is issued."""
     user = update.effective_user
@@ -52,9 +49,9 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     await update.message.reply_text("Help!")
 
 
-async def termine_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def termine(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /termine is issued."""
-    response = requests.get("https://www.lug-taunus.org/termine")
+    response = await client.get("https://www.lug-taunus.org/termine")
     response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
     meta_description = soup.html.head.find("meta", itemprop="description")
@@ -63,18 +60,26 @@ async def termine_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     await update.message.reply_text(termine)
 
 
+async def post_shutdown(application: Application) -> None:
+    """Callback that is executed after shutting down the application."""
+    # Close async HTTP client
+    await client.aclose()
+
+
 def main() -> None:
-    """Start the bot."""
-    token_file = Path(".") / "token"
-    token = token_file.read_text().strip()
+    """Start the telegram bot."""
+    # Create the application and pass it the bot's token
+    application = (
+        Application.builder()
+        .token(settings.TELEGRAM_TOKEN)
+        .post_shutdown(post_shutdown)
+        .build()
+    )
 
-    # Create the Application and pass it your bot's token.
-    application = Application.builder().token(token).build()
-
-    # on different commands - answer in Telegram
+    # Add handlers to answer to commands
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
-    application.add_handler(CommandHandler("termine", termine_command))
+    application.add_handler(CommandHandler("termine", termine))
 
     # Run the bot until the user presses Ctrl-C
     application.run_polling(allowed_updates=Update.ALL_TYPES)

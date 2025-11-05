@@ -36,28 +36,43 @@ client = httpx.AsyncClient()
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message when the command /start is issued."""
+    """Send a welcome message on the first interaction with the bot."""
     user = update.effective_user
+    text = rf"""Hi {user.mention_html()}! I am Babbel Tux, nice to meet you.
+
+For more information about what I can do type the /help command.
+"""
     await update.message.reply_html(
-        rf"Hi {user.mention_html()}!",
+        text,
         reply_markup=ForceReply(selective=True),
     )
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message when the command /help is issued."""
-    await update.message.reply_text("Help!")
+    """Send a message with a short help text and a list of commands."""
+    commands = ""
+    for handler_group in context.application.handlers.values():
+        for handler in handler_group:
+            if isinstance(handler, CommandHandler):
+                command_str = ", /".join(handler.commands)
+                commands += f"/{command_str} - {handler.callback.__doc__}\n"
+    text = rf"""I can help you find out more about the LUG-Taunus.
+
+Following a list of commands you can use:
+
+{commands}"""
+    await update.message.reply_text(text)
 
 
-async def termine(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message when the command /termine is issued."""
+async def dates(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send a message with the next dates for the LUG-Taunus meetings."""
     response = await client.get("https://www.lug-taunus.org/termine")
     response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
     meta_description = soup.html.head.find("meta", itemprop="description")
-    termine_content = meta_description["content"]
-    termine = termine_content.replace("\v", "\n").replace("-- ", "")
-    await update.message.reply_text(termine)
+    content = meta_description["content"]
+    dates = content.replace("\v", "\n").replace("-- ", "")
+    await update.message.reply_text(dates)
 
 
 async def post_shutdown(application: Application) -> None:
@@ -79,10 +94,11 @@ def main() -> None:
     # Add handlers to answer to commands
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
-    application.add_handler(CommandHandler("termine", termine))
+    application.add_handler(CommandHandler({"dates", "termine"}, dates))
 
     # Run the bot until the user presses Ctrl-C
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    # Drop pending updates (e.g. messages received while the bot was offline)
+    application.run_polling(drop_pending_updates=True)
 
 
 if __name__ == "__main__":

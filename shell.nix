@@ -16,6 +16,10 @@ pkgs.mkShell {
   ];
 
   shellHook = ''
+    # Update and activate the project environment with uv
+    uv sync --frozen
     . .venv/bin/activate
+    # Activate commitizen command-line completion for this shell session
+    eval "$(register-python-argcomplete cz)"
   '';
 }
